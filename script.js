@@ -1,51 +1,39 @@
-// Kredensial JSONBin.io milik Anda
 const BIN_ID = '6a58696cf5f4af5e2995e5ad';
 const MASTER_KEY = '$2a$10$r7I.AEjQuUfcR1rKNWFanuDpJcYhqz.EmTPRL3aWxY3H.hiGx6ZmC';
 const API_URL = `https://jsonbin.io{BIN_ID}`;
 
 let localData = [];
 
-// Set otomatis tanggal input ke hari ini
+// Atur input tanggal otomatis ke hari ini
 document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
 
-// 1. FUNGSI AMBIL DATA (GET)
+// 1. MEMUAT DATA DARI SERVER (GET)
 async function fetchData() {
     try {
-        const response = await fetch(API_URL, {
-            method: 'GET',
-            headers: { 
-                'X-Master-Key': MASTER_KEY
+        const response = await axios.get(API_URL, {
+            headers: {
+                'X-Master-Key': MASTER_KEY,
+                'X-Bin-Meta': 'false' // Mengambil konten data murninya saja
             }
         });
         
-        if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
-        
-        const result = await response.json();
-        
-        // Antisipasi jika JSONBin mengembalikan objek metadata atau array murni
-        if (result && result.record) {
-            localData = Array.isArray(result.record) ? result.record : [];
-        } else if (Array.isArray(result)) {
-            localData = result;
-        } else {
-            localData = [];
-        }
-        
+        // Membaca array dari properti "transaksi" sesuai Langkah 1
+        localData = response.data.transaksi || [];
         renderTable();
     } catch (error) {
-        console.error('Gagal mengambil data:', error);
-        alert('Gagal memuat data dari server JSONBin. Periksa jaringan Anda.');
+        console.error('Error saat mengambil data:', error);
+        alert('Gagal memuat data dari JSONBin. Pastikan format data awal di JSONBin sudah disesuaikan.');
     }
 }
 
-// 2. FUNGSI TAMPILKAN DATA KE TABEL HTML
+// 2. ME-RENDER DATA KE TABEL HTML
 function renderTable() {
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = '';
     
     let totalSaldo = 0;
 
-    if (!localData || localData.length === 0) {
+    if (localData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="loading">Belum ada riwayat transaksi.</td></tr>`;
         document.getElementById('total-saldo').innerText = 'Rp 0';
         return;
@@ -58,9 +46,9 @@ function renderTable() {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="text-center">${item.tanggal || '-'}</td>
-            <td>${item.prihal || '-'}</td>
-            <td>${item.pengguna || '-'}</td>
+            <td class="text-center">${item.tanggal}</td>
+            <td>${item.prihal}</td>
+            <td>${item.pengguna}</td>
             <td class="text-right deposit-val">${dep > 0 ? 'Rp ' + dep.toLocaleString('id-ID') : '-'}</td>
             <td class="text-right pengeluaran-val">${peng > 0 ? 'Rp ' + peng.toLocaleString('id-ID') : '-'}</td>
         `;
@@ -70,7 +58,7 @@ function renderTable() {
     document.getElementById('total-saldo').innerText = 'Rp ' + totalSaldo.toLocaleString('id-ID');
 }
 
-// 3. FUNGSI KONTROL POP-UP MODAL
+// 3. ATUR POP-UP MODAL (BUKA / TUTUP)
 function toggleModal(show) {
     const modal = document.getElementById('modalOverlay');
     if (show) {
@@ -82,7 +70,7 @@ function toggleModal(show) {
     }
 }
 
-// 4. FUNGSI KIRIM DATA BARU (PUT)
+// 4. MENGIRIM DATA BARU KE SERVER (PUT)
 document.getElementById('transaksiForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -104,36 +92,31 @@ document.getElementById('transaksiForm').addEventListener('submit', async functi
         pengeluaran: jenis === 'pengeluaran' ? nominal : 0
     };
 
-    // Gabungkan data lama dengan entri baru
-    const updatedData = [...localData, dataBaru];
+    // Gabungkan array data kas lama dengan transaksi baru
+    const updatedTransaksi = [...localData, dataBaru];
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'PUT',
+        // Kirim data utuh yang baru dibungkus objek transaksi ke JSONBin
+        await axios.put(API_URL, {
+            transaksi: updatedTransaksi
+        }, {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Master-Key': MASTER_KEY
-            },
-            body: JSON.stringify(updatedData)
+            }
         });
 
-        if (response.ok) {
-            localData = updatedData;
-            renderTable();
-            toggleModal(false);
-        } else {
-            const errResult = await response.json();
-            throw new Error(errResult.message || 'Gagal menyimpan.');
-        }
+        localData = updatedTransaksi;
+        renderTable();
+        toggleModal(false);
     } catch (error) {
-        console.error('Gagal menyimpan data:', error);
-        alert('Gagal mengirim data ke server: ' + error.message);
+        console.error('Error saat menyimpan data:', error);
+        alert('Gagal mengirim data: ' + (error.response?.data?.message || error.message));
     } finally {
         btnSimpan.innerText = 'Simpan Data';
         btnSimpan.disabled = false;
     }
 });
 
-// Pemicu awal saat halaman dimuat di GitHub Pages
+// Jalankan fungsi load data saat halaman web GitHub Pages dibuka
 fetchData();
-
