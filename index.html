@@ -3,189 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Buku Bank Digital</title>
-    <!-- Tailwind CSS untuk Desain Modern -->
-    <script src="https://tailwindcss.com"></script>
-    <!-- Google Fonts untuk Font Mewah -->
-    <link href="https://googleapis.com" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    </style>
+    <title>Laporan Keuangan - Buku Bank</title>
+    <!-- Menghubungkan ke file CSS eksternal -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-50 min-h-screen p-4 md:p-8">
+<body>
 
-    <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-        <!-- Header & Tombol Aksi -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 border-b border-slate-100 pb-5">
-            <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Buku Kas & Bank</h1>
-                <p class="text-sm text-slate-500 mt-1">Catatan mutasi keuangan digital secara real-time.</p>
-            </div>
-            <button onclick="toggleModal(true)" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-medium text-sm transition-all duration-200 shadow-sm flex items-center gap-2">
-                <svg xmlns="http://w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                Tambah Transaksi
-            </button>
-        </div>
+<div class="container">
+    <h1>Buku Kas & Bank</h1>
 
-        <!-- Tabel Mutasi -->
-        <div class="overflow-x-auto rounded-xl border border-slate-200">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
-                        <th class="px-6 py-4">Perihal / Keterangan</th>
-                        <th class="px-6 py-4">Pengguna</th>
-                        <th class="px-6 py-4 text-right">Deposit (Masuk)</th>
-                        <th class="px-6 py-4 text-right">Pengeluaran (Keluar)</th>
-                    </tr>
-                </thead>
-                <tbody id="table-body" class="divide-y divide-slate-100 text-sm text-slate-700">
-                    <!-- Data akan diisi otomatis oleh JavaScript -->
-                    <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-slate-400 animate-pulse">Memuat data dari kasir pusat...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="action-bar">
+        <button class="btn-add" onclick="toggleModal(true)">+ Tambah Transaksi</button>
+        <div class="saldo-box">Total Saldo: <strong id="total-saldo">Rp 0</strong></div>
     </div>
 
-    <!-- Pop-up Form Modal -->
-    <div id="modal-form" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
-            <div class="flex justify-between items-center mb-5">
-                <h3 class="text-lg font-bold text-slate-800">Catat Transaksi Baru</h3>
-                <button onclick="toggleModal(false)" class="text-slate-400 hover:text-slate-600">
-                    <svg xmlns="http://w3.org" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            
-            <form id="transaction-form" onsubmit="submitData(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Perihal</label>
-                    <input type="text" id="perihal" required placeholder="Contoh: Beli Token Listrik" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pengguna</label>
-                    <input type="text" id="pengguna" required placeholder="Nama Anda" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-sm">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Deposit (Rp)</label>
-                        <input type="number" id="deposit" value="0" min="0" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Pengeluaran (Rp)</label>
-                        <input type="number" id="pengeluaran" value="0" min="0" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-blue-500 text-sm">
-                    </div>
-                </div>
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="toggleModal(false)" class="w-1/2 border border-slate-200 hover:bg-slate-50 text-slate-600 py-2.5 rounded-xl text-sm font-medium transition">Batal</button>
-                    <button type="submit" id="btn-submit" class="w-1/2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition shadow-sm">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Script Integrasi JSONBin -->
-    <script>
-        const BIN_ID = '6a58696cf5f4af5e2995e5a7';
-        const API_KEY = '$2a$10$r7I.AEjQuUfcR1rKNWFanuDpJcYhqz.EmTPRL3aWxY3H.hiGx6ZmC';
-        const URL = `https://jsonbin.io{BIN_ID}`;
-
-        let currentData = [];
-
-        // Fungsi Buka/Tutup Pop-up
-        function toggleModal(show) {
-            const modal = document.getElementById('modal-form');
-            if(show) {
-                modal.classList.remove('hidden');
-                document.getElementById('transaction-form').reset();
-            } else {
-                modal.classList.add('hidden');
-            }
-        }
-
-        // Format Angka ke Rupiah Currency
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(angka);
-        }
-
-        // Ambil Data Mendalam dari JSONBin
-        async function loadData() {
-            try {
-                const response = await fetch(`${URL}/latest`, {
-                    headers: { 'X-Master-Key': API_KEY }
-                });
-                const result = await response.json();
-                // JSONBin membungkus object utama di dalam properti "record"
-                currentData = result.record.transaksi || [];
-                renderTable();
-            } catch (error) {
-                alert('Gagal memuat data dari server cloud!');
-                console.error(error);
-            }
-        }
-
-        // Gambar Ulang Baris Tabel
-        function renderTable() {
-            const tbody = document.getElementById('table-body');
-            if (currentData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-slate-400">Belum ada riwayat transaksi.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = currentData.map(item => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="px-6 py-4 font-medium text-slate-900">${item.perihal}</td>
-                    <td class="px-6 py-4 text-slate-500">${item.pengguna}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-emerald-600">${item.deposit > 0 ? formatRupiah(item.deposit) : '-'}</td>
-                    <td class="px-6 py-4 text-right font-semibold text-rose-600">${item.pengeluaran > 0 ? formatRupiah(item.pengeluaran) : '-'}</td>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Tanggal</th>
+                    <th style="width: 35%;">Prihal / Keterangan</th>
+                    <th style="width: 15%;">Pengguna</th>
+                    <th style="width: 18%;" class="text-right">Deposit (+)</th>
+                    <th style="width: 18%;" class="text-right">Pengeluaran (-)</th>
                 </tr>
-            `).join('');
-        }
+            </thead>
+            <tbody id="table-body">
+                <tr>
+                    <td colspan="5" class="loading">Memuat data dari server...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
-        // Kirim Aksi Transaksi Baru (Method: PUT)
-        async function submitData(e) {
-            e.preventDefault();
-            const btnSubmit = document.getElementById('btn-submit');
-            
-            const perihal = document.getElementById('perihal').value;
-            const pengguna = document.getElementById('pengguna').value;
-            const deposit = parseFloat(document.getElementById('deposit').value) || 0;
-            const pengeluaran = parseFloat(document.getElementById('pengeluaran').value) || 0;
+<!-- Pop-up Form (Modal) -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2>Tambah Aksi Kas</h2>
+        <form id="transaksiForm">
+            <div class="form-group">
+                <label for="tanggal">Tanggal</label>
+                <input type="date" id="tanggal" required>
+            </div>
+            <div class="form-group">
+                <label for="prihal">Prihal / Keterangan</label>
+                <input type="text" id="prihal" placeholder="Contoh: Bayar Listrik" required>
+            </div>
+            <div class="form-group">
+                <label for="pengguna">Pengguna</label>
+                <input type="text" id="pengguna" placeholder="Nama penginput" required>
+            </div>
+            <div class="form-group">
+                <label for="jenis">Jenis Transaksi</label>
+                <select id="jenis">
+                    <option value="deposit">Deposit (Masuk)</option>
+                    <option value="pengeluaran">Pengeluaran (Keluar)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="nominal">Nominal (Rp)</label>
+                <input type="number" id="nominal" min="1" placeholder="0" required>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="toggleModal(false)">Batal</button>
+                <button type="submit" class="btn-submit" id="btnSimpan">Simpan Data</button>
+            </div>
+        </form>
+    </div>
+</div>
 
-            const newTransaction = { perihal, pengguna, deposit, pengeluaran };
-            
-            // Masukkan data baru ke dalam array yang sudah ada
-            const updatedData = { transaksi: [...currentData, newTransaction] };
+<!-- Menghubungkan ke file JavaScript eksternal -->
+<script src="script.js"></script>
+</body>
+</html>
 
-            btnSubmit.innerText = 'Menyimpan...';
-            btnSubmit.disabled = true;
-
-            try {
-                const response = await fetch(URL, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Master-Key': API_KEY
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-
-                if (response.ok) {
-                    currentData = updatedData.transaksi;
-                    renderTable();
-                    toggleModal(false);
-                } else {
-                    alert('Gagal memperbarui data di cloud.');
-                }
-            } catch (error) {
-                alert('Terjadi kesalahan jaringan.');
-                console.error(error);
-            } finally {
-                btnSubmit.innerText = 'Simpan';
-                btnSubmit.disabled = false;
-            }
-        }
-
-        // Load data otomatis saat pertama kali dibuka
-        window.onload = loadData;
