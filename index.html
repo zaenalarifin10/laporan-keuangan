@@ -3,79 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laporan Keuangan - Buku Bank</title>
-    <!-- Menghubungkan ke file CSS eksternal -->
-    <link rel="stylesheet" href="style.css">
+    <title>Buku Bank</title>
+    <style>
+        body { font-family: monospace; background: #f4f7f6; padding: 20px; color: #2c3e50; }
+        .box { max-width: 900px; margin: 0 auto; background: #fffdf7; border: 2px solid #d1cfc4; padding: 20px; border-radius: 8px; }
+        h1 { text-align: center; border-bottom: 2px dashed #d1cfc4; padding-bottom: 10px; }
+        .flex { display: flex; justify-content: space-between; margin-bottom: 20px; align-items: center; }
+        button { font-weight: bold; cursor: pointer; padding: 8px 15px; border-radius: 4px; }
+        .btn-add { background: #2980b9; color: white; border: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #d1cfc4; padding: 10px; text-align: left; }
+        th { background: #f1efe6; }
+        .r { text-align: right; }
+        .c { text-align: center; }
+        .in { color: #27ae60; }
+        .out { color: #c0392b; }
+        .pop { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; }
+        .form { background: white; padding: 20px; border-radius: 6px; width: 100%; max-width: 400px; }
+        .fg { margin-bottom: 12px; }
+        .fg label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .fg input, .fg select { width: 100%; padding: 6px; box-sizing: border-box; }
+        .actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    </style>
 </head>
 <body>
 
-<div class="container">
+<div class="box">
     <h1>Buku Kas & Bank</h1>
-
-    <div class="action-bar">
-        <button class="btn-add" onclick="toggleModal(true)">+ Tambah Transaksi</button>
-        <div class="saldo-box">Total Saldo: <strong id="total-saldo">Rp 0</strong></div>
+    <div class="flex">
+        <button class="btn-add" onclick="openPop(true)">+ Tambah Transaksi</button>
+        <div style="font-size:1.2rem">Saldo: <strong id="saldo">Rp 0</strong></div>
     </div>
-
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 15%;">Tanggal</th>
-                    <th style="width: 35%;">Prihal / Keterangan</th>
-                    <th style="width: 15%;">Pengguna</th>
-                    <th style="width: 17%;" class="text-right">Deposit (+)</th>
-                    <th style="width: 17%;" class="text-right">Pengeluaran (-)</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <tr>
-                    <td colspan="5" class="loading">Memuat data dari server JSONBin...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+    <table tender>
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Prihal</th>
+                <th>Pengguna</th>
+                <th class="r">Deposit (+)</th>
+                <th class="r">Pengeluaran (-)</th>
+            </tr>
+        </thead>
+        <tbody id="list">
+            <tr><td colspan="5" class="c">Memuat data kas...</td></tr>
+        </tbody>
+    </table>
 </div>
 
-<!-- Pop-up Form (Modal) -->
-<div class="modal-overlay" id="modalOverlay">
-    <div class="modal">
-        <h2>Tambah Aksi Kas</h2>
-        <form id="transaksiForm">
-            <div class="form-group">
-                <label for="tanggal">Tanggal</label>
-                <input type="date" id="tanggal" required>
-            </div>
-            <div class="form-group">
-                <label for="prihal">Prihal / Keterangan</label>
-                <input type="text" id="prihal" placeholder="Contoh: Bayar Listrik" required>
-            </div>
-            <div class="form-group">
-                <label for="pengguna">Pengguna</label>
-                <input type="text" id="pengguna" placeholder="Nama penginput" required>
-            </div>
-            <div class="form-group">
-                <label for="jenis">Jenis Transaksi</label>
-                <select id="jenis">
-                    <option value="deposit">Deposit (Masuk)</option>
-                    <option value="pengeluaran">Pengeluaran (Keluar)</option>
+<div class="pop" id="pop">
+    <div class="form">
+        <h3>Tambah Aksi Kas</h3>
+        <form id="fKas">
+            <div class="fg"><label>Tanggal</label><input type="date" id="tgl" required></div>
+            <div class="fg"><label>Prihal</label><input type="text" id="prh" placeholder="Contoh: Beli Token" required></div>
+            <div class="fg"><label>Pengguna</label><input type="text" id="user" placeholder="Nama Anda" required></div>
+            <div class="fg">
+                <label>Jenis</label>
+                <select id="jns">
+                    <option value="in">Deposit (Masuk)</option>
+                    <option value="out">Pengeluaran (Keluar)</option>
                 </select>
             </div>
-            <div class="form-group">
-                <label for="nominal">Nominal (Rp)</label>
-                <input type="number" id="nominal" min="1" placeholder="0" required>
-            </div>
-            <div class="modal-actions">
-                <button type="button" class="btn-cancel" onclick="toggleModal(false)">Batal</button>
-                <button type="submit" class="btn-submit" id="btnSimpan">Simpan Data</button>
+            <div class="fg"><label>Nominal (Rp)</label><input type="number" id="nom" min="1" required></div>
+            <div class="actions">
+                <button type="button" onclick="openPop(false)">Batal</button>
+                <button type="submit" id="save" style="background:#27ae60; color:white; border:none;">Simpan</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- PENTING: Menggunakan Axios CDN untuk kestabilan koneksi di GitHub Pages -->
-<script src="https://jsdelivr.net"></script>
-<!-- Menghubungkan ke file JavaScript eksternal -->
-<script src="script.js"></script>
+<script>
+    const URL = 'https://jsonbin.io';
+    const KEY = '$2a$10$r7I.AEjQuUfcR1rKNWFanuDpJcYhqz.EmTPRL3aWxY3H.hiGx6ZmC';
+    let db = [];
+
+    document.getElementById('tgl').value = new Date().toISOString().split('T')[0];
+
+    async function loadData() {
+        try {
+            const r = await fetch(URL, { headers: { 'X-Master-Key': KEY, 'X-Bin-Meta': 'false' } });
+            db = await r.json();
+            if(!Array.isArray(db)) db = db.record || [];
+            showTable();
+        } catch (e) {
+            document.getElementById('list').innerHTML = '<tr><td colspan="5" class="c">Gagal memuat database JSONBin</td></tr>';
+        }
+    }
+
+    function showTable() {
+        const tbody = document.getElementById('list');
+        tbody.innerHTML = '';
+        let total = 0;
+        
+        if(db.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="c">Belum ada transaksi.</td></tr>';
+            return;
+        }
+
+        db.forEach(i => {
+            const d = Number(i.deposit) || 0;
+            const p = Number(i.pengeluaran) || 0;
+            total += (d - p);
+            tbody.innerHTML += `
+                <tr>
+                    <td class="c">${i.tanggal}</td>
+                    <td>${i.prihal}</td>
+                    <td>${i.pengguna}</td>
+                    <td class="r in">${d > 0 ? 'Rp ' + d.toLocaleString('id-ID') : '-'}</td>
+                    <td class="r out">${p > 0 ? 'Rp ' + p.toLocaleString('id-ID') : '-'}</td>
+                </tr>`;
+        });
+        document.getElementById('saldo').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function openPop(open) {
+        document.getElementById('pop').style.display = open ? 'flex' : 'none';
+        if(!open) document.getElementById('fKas').reset();
+    }
+
+    document.getElementById('fKas').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('save');
+        btn.innerText = 'Proses...'; btn.disabled = true;
+
+        const item = {
+            tanggal: document.getElementById('tgl').value,
+            prihal: document.getElementById('prh').value,
+            pengguna: document.getElementById('user').value,
+            deposit: document.getElementById('jns').value === 'in' ? parseInt(document.getElementById('nom').value) : 0,
+            pengeluaran: document.getElementById('jns').value === 'out' ? parseInt(document.getElementById('nom').value) : 0
+        };
+
+        const update = [...db, item];
+
+        try {
+            const r = await fetch(URL, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'X-Master-Key': KEY },
+                body: JSON.stringify(update)
+            });
+            if(r.ok) { db = update; showTable(); openPop(false); } 
+            else { alert('Gagal memperbarui JSONBin'); }
+        } catch (err) {
+            alert('Error koneksi: ' + err.message);
+        } finally {
+            btn.innerText = 'Simpan'; btn.disabled = false;
+        }
+    });
+
+    loadData();
+</script>
 </body>
 </html>
