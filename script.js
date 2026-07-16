@@ -1,45 +1,51 @@
-// Konfigurasi API JSONBin.io kredensial milik Anda
+// Kredensial JSONBin.io milik Anda
 const BIN_ID = '6a58696cf5f4af5e2995e5ad';
 const MASTER_KEY = '$2a$10$r7I.AEjQuUfcR1rKNWFanuDpJcYhqz.EmTPRL3aWxY3H.hiGx6ZmC';
 const API_URL = `https://jsonbin.io{BIN_ID}`;
 
 let localData = [];
 
-// Atur tanggal hari ini di form input saat dimuat
+// Set otomatis tanggal input ke hari ini
 document.getElementById('tanggal').value = new Date().toISOString().split('T')[0];
 
-// Fungsi mengambil data dari API JSONBin
+// 1. FUNGSI AMBIL DATA (GET)
 async function fetchData() {
     try {
         const response = await fetch(API_URL, {
             method: 'GET',
             headers: { 
-                'X-Master-Key': MASTER_KEY,
-                'X-Bin-Meta': 'false' // Mengabaikan meta-data bawaan JSONBin agar langsung mendapat array data
+                'X-Master-Key': MASTER_KEY
             }
         });
         
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
         
         const result = await response.json();
         
-        // Memastikan data yang diambil berformat Array
-        localData = Array.isArray(result) ? result : (result.record || []);
+        // Antisipasi jika JSONBin mengembalikan objek metadata atau array murni
+        if (result && result.record) {
+            localData = Array.isArray(result.record) ? result.record : [];
+        } else if (Array.isArray(result)) {
+            localData = result;
+        } else {
+            localData = [];
+        }
+        
         renderTable();
     } catch (error) {
-        console.error('Detail Error:', error);
-        alert('Gagal memuat data dari server. Pastikan Anda menjalankan aplikasi menggunakan Local Server (Live Server/HTTP Server).');
+        console.error('Gagal mengambil data:', error);
+        alert('Gagal memuat data dari server JSONBin. Periksa jaringan Anda.');
     }
 }
 
-// Fungsi memproses data array ke elemen tabel HTML
+// 2. FUNGSI TAMPILKAN DATA KE TABEL HTML
 function renderTable() {
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = '';
     
     let totalSaldo = 0;
 
-    if (localData.length === 0) {
+    if (!localData || localData.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="loading">Belum ada riwayat transaksi.</td></tr>`;
         document.getElementById('total-saldo').innerText = 'Rp 0';
         return;
@@ -52,9 +58,9 @@ function renderTable() {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="text-center">${item.tanggal}</td>
-            <td>${item.prihal}</td>
-            <td>${item.pengguna}</td>
+            <td class="text-center">${item.tanggal || '-'}</td>
+            <td>${item.prihal || '-'}</td>
+            <td>${item.pengguna || '-'}</td>
             <td class="text-right deposit-val">${dep > 0 ? 'Rp ' + dep.toLocaleString('id-ID') : '-'}</td>
             <td class="text-right pengeluaran-val">${peng > 0 ? 'Rp ' + peng.toLocaleString('id-ID') : '-'}</td>
         `;
@@ -64,7 +70,7 @@ function renderTable() {
     document.getElementById('total-saldo').innerText = 'Rp ' + totalSaldo.toLocaleString('id-ID');
 }
 
-// Fungsi membuka dan menutup jendela Pop-up Form
+// 3. FUNGSI KONTROL POP-UP MODAL
 function toggleModal(show) {
     const modal = document.getElementById('modalOverlay');
     if (show) {
@@ -76,7 +82,7 @@ function toggleModal(show) {
     }
 }
 
-// Handler event saat user menekan tombol simpan form
+// 4. FUNGSI KIRIM DATA BARU (PUT)
 document.getElementById('transaksiForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
@@ -98,7 +104,7 @@ document.getElementById('transaksiForm').addEventListener('submit', async functi
         pengeluaran: jenis === 'pengeluaran' ? nominal : 0
     };
 
-    // Gabungkan riwayat data lama dengan entri data yang baru dibuat
+    // Gabungkan data lama dengan entri baru
     const updatedData = [...localData, dataBaru];
 
     try {
@@ -116,16 +122,18 @@ document.getElementById('transaksiForm').addEventListener('submit', async functi
             renderTable();
             toggleModal(false);
         } else {
-            throw new Error(`Gagal menyimpan! Status: ${response.status}`);
+            const errResult = await response.json();
+            throw new Error(errResult.message || 'Gagal menyimpan.');
         }
     } catch (error) {
-        console.error('Detail Error:', error);
-        alert('Kesalahan sistem saat menyimpan: ' + error.message);
+        console.error('Gagal menyimpan data:', error);
+        alert('Gagal mengirim data ke server: ' + error.message);
     } finally {
         btnSimpan.innerText = 'Simpan Data';
         btnSimpan.disabled = false;
     }
 });
 
-// Eksekusi pengambilan data secara otomatis saat web dibuka
+// Pemicu awal saat halaman dimuat di GitHub Pages
 fetchData();
+
