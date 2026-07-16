@@ -13,16 +13,22 @@ async function fetchData() {
     try {
         const response = await fetch(API_URL, {
             method: 'GET',
-            headers: { 'X-Master-Key': MASTER_KEY }
+            headers: { 
+                'X-Master-Key': MASTER_KEY,
+                'X-Bin-Meta': 'false' // Mengabaikan meta-data bawaan JSONBin agar langsung mendapat array data
+            }
         });
         
-        if (!response.ok) throw new Error('Koneksi ke JSONBin gagal.');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const result = await response.json();
-        localData = result.record || [];
+        
+        // Memastikan data yang diambil berformat Array
+        localData = Array.isArray(result) ? result : (result.record || []);
         renderTable();
     } catch (error) {
-        alert('Gagal memuat data: ' + error.message);
+        console.error('Detail Error:', error);
+        alert('Gagal memuat data dari server. Pastikan Anda menjalankan aplikasi menggunakan Local Server (Live Server/HTTP Server).');
     }
 }
 
@@ -110,10 +116,11 @@ document.getElementById('transaksiForm').addEventListener('submit', async functi
             renderTable();
             toggleModal(false);
         } else {
-            throw new Error('Gagal memperbarui database JSONBin.');
+            throw new Error(`Gagal menyimpan! Status: ${response.status}`);
         }
     } catch (error) {
-        alert('Kesalahan sistem: ' + error.message);
+        console.error('Detail Error:', error);
+        alert('Kesalahan sistem saat menyimpan: ' + error.message);
     } finally {
         btnSimpan.innerText = 'Simpan Data';
         btnSimpan.disabled = false;
@@ -122,4 +129,3 @@ document.getElementById('transaksiForm').addEventListener('submit', async functi
 
 // Eksekusi pengambilan data secara otomatis saat web dibuka
 fetchData();
-
